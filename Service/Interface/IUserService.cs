@@ -17,7 +17,7 @@ public interface IUserService
     /// </summary>
     /// <param name="id">Individual identifier</param>
     /// <returns>Found user by given id</returns>
-    public Task<User> GetUserById(int id);
+    public Task<User?> GetUserById(int id);
     
     /// <summary>
     /// Adds new user into database
@@ -32,7 +32,7 @@ public interface IUserService
     /// <param name="id">Individual identifier</param>
     /// <param name="user">New user data to overwrite old</param>
     /// <returns>Newly updated and saved user from database</returns>
-    public Task<User> UpdateUser(int id, User user);
+    public Task<User?> UpdateUser(int id, User user);
     
     /// <summary>
     /// Removes single user from database by given individual identifier
