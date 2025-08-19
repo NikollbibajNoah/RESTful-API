@@ -39,5 +39,5 @@ public interface IUserService
     /// </summary>
     /// <param name="id">Individual identifier</param>
     /// <returns>Deleted user from database</returns>
-    public Task<User> DeleteUser(int id);
+    public Task<User?> DeleteUser(int id);
 }

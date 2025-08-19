@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("RESTful")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+7d9622adc8469d42bc3ae7f51df6795c79fb46a2")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+f3ee734379af51ac7f8931682862f9f7c00aff56")]
 [assembly: System.Reflection.AssemblyProductAttribute("RESTful")]
 [assembly: System.Reflection.AssemblyTitleAttribute("RESTful")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

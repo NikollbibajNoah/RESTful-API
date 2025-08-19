@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using RESTful.Entity;
+using RESTful.Exceptions;
 using RESTful.Service.Interface;
 
 namespace RESTful.Controllers;
@@ -19,7 +20,8 @@ public class UserController : ControllerBase
     [HttpGet]
     public async Task<ActionResult<List<User>>> GetAllUsers()
     {
-        List<User> users = await _userService.GetAllUsers();
+        var users = await _userService.GetAllUsers();
+        // if (users == null || users.Count == 0) return NoContent();
 
         return Ok(users);
     }
@@ -27,7 +29,9 @@ public class UserController : ControllerBase
     [HttpGet("{id}")]
     public async Task<ActionResult<User>> GetUserById(int id)
     {
-        User foundUser = await _userService.GetUserById(id);
+        var foundUser = await _userService.GetUserById(id);
+
+        // if (foundUser == null) throw new NotFoundException($"User with ID {id} was not found.");
         
         return Ok(foundUser);
     }
@@ -35,15 +39,23 @@ public class UserController : ControllerBase
     [HttpPost]
     public async Task<ActionResult<User>> CreateUser(User user)
     {
-        User createdUser = await _userService.CreateUser(user);
+        // if (!ModelState.IsValid) throw new ValidationException("User model is invalid.");
 
-        return Ok(createdUser);
+        var createdUser = await _userService.CreateUser(user);
+
+        return CreatedAtAction(nameof(GetUserById), new { id = createdUser.Id }, createdUser); // 201
     }
 
     [HttpPut("{id}")]
     public async Task<ActionResult<User>> UpdateUser(int id, User user)
     {
-        User updatedUser = await _userService.UpdateUser(id, user);
+        // if (id != user.Id) throw new ValidationException($"Given ID {id} does not match User ID {user.Id}.");
+        //
+        // if (!ModelState.IsValid) throw new ValidationException("User model is invalid.");
+        
+        var updatedUser = await _userService.UpdateUser(id, user);
+
+        // if (updatedUser == null) return NotFound();
         
         return Ok(updatedUser);
     }
@@ -51,7 +63,9 @@ public class UserController : ControllerBase
     [HttpDelete("{id}")]
     public async Task<ActionResult<User>> DeleteUser(int id)
     {
-        User deletedUser = await _userService.DeleteUser(id);
+        var deletedUser = await _userService.DeleteUser(id);
+        
+        // if (deletedUser == null) throw new NotFoundException($"User with ID {id} was not found.");
 
         return Ok(deletedUser);
     }
