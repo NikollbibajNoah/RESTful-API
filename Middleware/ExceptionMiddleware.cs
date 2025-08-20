@@ -27,7 +27,7 @@ public class ExceptionMiddleware
         }
     }
 
-    private static Task HandleExceptionAsync(HttpContext context, Exception exception)
+    private Task HandleExceptionAsync(HttpContext context, Exception exception)
     {
         HttpStatusCode statusCode = HttpStatusCode.InternalServerError;
         
@@ -38,14 +38,22 @@ public class ExceptionMiddleware
             case NotFoundException:
                 statusCode = HttpStatusCode.NotFound;
                 message = exception.Message;
+                _logger.LogWarning(exception, message);
                 break;
             case ArgumentException:
                 statusCode = HttpStatusCode.BadRequest;
                 message = exception.Message;
+                _logger.LogWarning(exception, message);
+                break;
+            case DatabaseException:
+                statusCode = HttpStatusCode.InternalServerError;
+                message = exception.Message;
+                _logger.LogError(exception, message);
                 break;
             default:
                 statusCode = HttpStatusCode.InternalServerError;
                 message = "An unexpected error occured";
+                _logger.LogError(exception, message);
                 break;
             // More exceptions down here...
         } 

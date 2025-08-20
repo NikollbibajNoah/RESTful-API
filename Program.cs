@@ -7,18 +7,24 @@ using RESTful.Service.Interface;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Database config
 var connectionString = builder.Configuration.GetConnectionString("RESTful_DB");
 
 builder.Services.AddDbContext<BackendDBContext>(options =>
     options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString)));
 
 // Add services to the container.
-
 // Dependency Injection
 builder.Services.AddScoped<IUserService, UserService>();
 
+// Logging config
+builder.Logging.ClearProviders();
+builder.Logging.AddConsole();
+builder.Logging.AddDebug();
+builder.Logging.SetMinimumLevel(LogLevel.Information);
+
 builder.Services.AddControllers();
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
+
 builder.Services.AddOpenApi();
 
 builder.Services.AddEndpointsApiExplorer();

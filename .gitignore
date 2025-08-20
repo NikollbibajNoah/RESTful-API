@@ -1,1 +1,52 @@
-﻿Docker/mysql/mysql_data/
+﻿# Build results
+/bin/
+/obj/
+/out/
+/publish/
+/artifacts/
+
+# Visual Studio cache/options
+.vs/
+.vscode/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# Rider
+.idea/
+
+# Logs
+*.log
+
+# NuGet
+*.nupkg
+*.snupkg
+*.nuspec
+*.nuget.props
+*.nuget.targets
+packages/
+
+# Entity Framework Migrations
+[Mm]igrations/
+
+# ASP.NET Scaffolding
+ScaffoldingReadMe.txt
+
+# dotenv
+.env
+
+# Docker
+Docker/mysql/mysql_data/
+**/docker-compose.override.yml
+
+# Temp files
+*.tmp
+*.temp
+*.bak
+*.swp
+*.lock
+
+# OS files
+.DS_Store
+Thumbs.db

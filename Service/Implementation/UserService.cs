@@ -10,26 +10,33 @@ public class UserService : IUserService
 {
     
     private readonly BackendDBContext _context;
+    private readonly ILogger<UserService> _logger;
 
-    public UserService(BackendDBContext context)
+    public UserService(BackendDBContext context, ILogger<UserService> logger)
     {
         _context = context;
+        _logger = logger;
     }
     
     public async Task<List<User>> GetAllUsers()
     {
-        var users = await _context.Users.ToListAsync();
+        _logger.LogInformation("Fetching all users from database...");
+        
+        var users = await _context.Users.AsNoTracking().ToListAsync();
 
-        if (users == null || users.Count == 0)
+        if (users.Count == 0)
+        {
+            _logger.LogWarning("No users found in the database.");
             throw new NotFoundException("No users found in the database.");
+        }
 
         return users;
     }
     
     public async Task<User?> GetUserById(int id)
     {
-        var user = await _context.Users.FindAsync(id);
-
+        var user = await _context.Users.AsNoTracking().FirstOrDefaultAsync(u => u.Id == id);
+        
         if (user == null)
             throw new NotFoundException($"User with ID {id} was not found.");
 
@@ -42,7 +49,8 @@ public class UserService : IUserService
             throw new ValidationException("User data cannot be null.");
 
         _context.Users.Add(user);
-        await _context.SaveChangesAsync();
+        
+        await SaveChangesSafeAsync();
 
         return user;
     }
@@ -63,7 +71,7 @@ public class UserService : IUserService
         existing.Email = user.Email;
         existing.Position = user.Position;
 
-        await _context.SaveChangesAsync();
+        await SaveChangesSafeAsync();
 
         return existing;
     }
@@ -76,8 +84,19 @@ public class UserService : IUserService
             throw new NotFoundException($"User with ID {id} was not found.");
 
         _context.Users.Remove(user);
-        await _context.SaveChangesAsync();
+
+        await SaveChangesSafeAsync();
 
         return user;
+    }
+    
+    private async Task SaveChangesSafeAsync()
+    {
+        try {
+            await _context.SaveChangesAsync();
+        }
+        catch (DbUpdateException ex) {
+            throw new DatabaseException("Failed to save changes.", ex);
+        }
     }
 }
