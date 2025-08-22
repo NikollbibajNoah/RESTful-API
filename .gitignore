@@ -38,6 +38,7 @@ ScaffoldingReadMe.txt
 
 # Docker
 Docker/mysql/mysql_data/
+Docker/postgres/postgres_auth_data
 **/docker-compose.override.yml
 
 # Temp files

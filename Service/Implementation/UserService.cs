@@ -9,10 +9,10 @@ namespace RESTful.Service.Implementation;
 public class UserService : IUserService
 {
     
-    private readonly BackendDBContext _context;
+    private readonly BackendDbContext _context;
     private readonly ILogger<UserService> _logger;
 
-    public UserService(BackendDBContext context, ILogger<UserService> logger)
+    public UserService(BackendDbContext context, ILogger<UserService> logger)
     {
         _context = context;
         _logger = logger;

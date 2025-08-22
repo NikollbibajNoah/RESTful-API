@@ -3,9 +3,9 @@ using RESTful.Entity;
 
 namespace RESTful.Context;
 
-public class BackendDBContext : DbContext
+public class BackendDbContext : DbContext
 {
-    public BackendDBContext(DbContextOptions<BackendDBContext> options) : base(options) { }
+    public BackendDbContext(DbContextOptions<BackendDbContext> options) : base(options) { }
 
     public DbSet<User> Users { get; set; }
 }
