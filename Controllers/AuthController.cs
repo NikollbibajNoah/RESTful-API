@@ -30,8 +30,8 @@ public class AuthController : ControllerBase
     [HttpPost("login")]
     public async Task<ActionResult<AuthResponse>> Login([FromBody] LoginRequest req)
     {
-        var (token, expiresAtUtc) = await _auth.LoginAsync(req);
-        return Ok(new AuthResponse { Token = token, ExpiresAtUtc = expiresAtUtc });
+        var result = await _auth.LoginAsync(req);
+        return Ok(new AuthResponse { Token = result.Token, ExpiresAtUtc = result.ExpiresAtUtc });
     }
 
     // Test: protected Endpoint

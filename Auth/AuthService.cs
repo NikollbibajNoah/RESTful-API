@@ -23,7 +23,7 @@ public class AuthService : IAuthService
     
     public async Task<AppUser> RegisterAsync(RegisterRequest req)
     {
-        // Username/Email uniqueness prüfen
+        // Check for uniqueness
         var exists = await _db.AppUsers
             .AnyAsync(u => u.Username == req.Username || u.Email == req.Email);
         if (exists)
@@ -45,7 +45,7 @@ public class AuthService : IAuthService
         return user;
     }
     
-    public async Task<(string token, DateTime expiresAtUtc)> LoginAsync(LoginRequest req)
+    public async Task<JwtTokenResult> LoginAsync(LoginRequest req)
     {
         var user = await _db.AppUsers
             .FirstOrDefaultAsync(u => u.Username == req.UsernameOrEmail || u.Email == req.UsernameOrEmail);

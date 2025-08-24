@@ -5,6 +5,8 @@ using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using RESTful.Auth.Interface;
 using RESTful.Entity;
+using RESTful.Entity.Auth;
+using RESTful.Entity.Auth.Claims;
 using JwtRegisteredClaimNames = Microsoft.IdentityModel.JsonWebTokens.JwtRegisteredClaimNames;
 
 namespace RESTful.Auth;
@@ -18,14 +20,14 @@ public class JwtTokenService : IJwtTokenService
         _options = options.Value;
     }
 
-    public (string token, DateTime expiresAtUtc) CreateToken(AppUser user)
+    public JwtTokenResult CreateToken(AppUser user)
     {
         var claims = new List<Claim>
         {
-            new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
-            new Claim(JwtRegisteredClaimNames.UniqueName, user.Username),
-            new Claim(JwtRegisteredClaimNames.Email, user.Email),
-            new Claim(ClaimTypes.Role, user.Role ?? "User"),
+            new Claim(JwtClaims.UserId, user.Id.ToString()),
+            new Claim(JwtClaims.Username, user.Username),
+            new Claim(JwtClaims.Email, user.Email),
+            new Claim(JwtClaims.Role, user.Role ?? "User"),
             new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
         };
         
@@ -43,6 +45,6 @@ public class JwtTokenService : IJwtTokenService
         
         var jwt = new JwtSecurityTokenHandler().WriteToken(token);
 
-        return (jwt, expires);
+        return new JwtTokenResult(jwt, expires);
     }
 }
