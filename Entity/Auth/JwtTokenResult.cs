@@ -4,13 +4,25 @@ namespace RESTful.Entity.Auth;
 
 public class JwtTokenResult
 {
-    public string Token { get; }
-    public DateTime ExpiresAtUtc { get; }
+    public string AccessToken { get; }
+    public DateTime AccessTokenExpiresAtUtc { get; }
+    
+    public string? RefreshToken { get; }
+    
+    public DateTime? RefreshTokenExpiresAtUtc { get; }
 
-    public JwtTokenResult(string token, DateTime expiresAtUtc)
+    public JwtTokenResult(string accessToken, DateTime accessTokenExpiresAtUtc)
     {
-        Token = token;
-        ExpiresAtUtc = expiresAtUtc;
+        AccessToken = accessToken;
+        AccessTokenExpiresAtUtc = accessTokenExpiresAtUtc;
+    }
+    
+    public JwtTokenResult(string accessToken, DateTime accessTokenExpiresAtUtc, string refreshToken, DateTime refreshTokenExpiresAtUtc)
+    {
+        AccessToken = accessToken;
+        AccessTokenExpiresAtUtc = accessTokenExpiresAtUtc;
+        RefreshToken = refreshToken;
+        RefreshTokenExpiresAtUtc = refreshTokenExpiresAtUtc;
     }
 
     public static JwtTokenResult FromToken(JwtSecurityToken token, string secret)

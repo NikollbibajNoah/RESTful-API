@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Identity;
+﻿using System.Security.Cryptography;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using RESTful.Auth.Interface;
 using RESTful.Context;
@@ -58,8 +59,61 @@ public class AuthService : IAuthService
         if (result == PasswordVerificationResult.Failed)
             throw new ValidationException("Benutzername/Email oder Passwort ist falsch.");
 
-        return _jwt.CreateToken(user);
+        var tokenResult = _jwt.CreateToken(user);
+        
+        var refreshToken = new RefreshToken
+        {
+            Token = Convert.ToBase64String(RandomNumberGenerator.GetBytes(64)),
+            Expires = DateTime.UtcNow.AddDays(7),
+            IsRevoked = false,
+            UserId = user.Id
+        };
+        
+        _db.RefreshTokens.Add(refreshToken);
+        await SaveChangesSafeAsync();
+        
+        return new JwtTokenResult(
+            tokenResult.AccessToken,
+            tokenResult.AccessTokenExpiresAtUtc,
+            refreshToken.Token,
+            refreshToken.Expires
+        );
     }
+    
+    public async Task<JwtTokenResult> RefreshAsync(string refreshTokenValue)
+    {
+        var refreshToken = await _db.RefreshTokens
+            .Include(rt => rt.User)
+            .SingleOrDefaultAsync(rt => rt.Token == refreshTokenValue);
+
+        if (refreshToken == null || refreshToken.IsRevoked || refreshToken.Expires < DateTime.UtcNow)
+            throw new ValidationException("Invalid refresh token");
+
+        var user = refreshToken.User ?? throw new ValidationException("User not found");
+
+        var accessTokenResult = _jwt.CreateToken(user);
+
+        // Refresh-Token rotation
+        refreshToken.IsRevoked = true;
+        var newRefreshToken = new RefreshToken
+        {
+            Token = Convert.ToBase64String(RandomNumberGenerator.GetBytes(64)),
+            Expires = DateTime.UtcNow.AddDays(7),
+            IsRevoked = false,
+            UserId = user.Id
+        };
+
+        _db.RefreshTokens.Add(newRefreshToken);
+        await SaveChangesSafeAsync();
+
+        return new JwtTokenResult(
+            accessTokenResult.AccessToken,
+            accessTokenResult.AccessTokenExpiresAtUtc,
+            newRefreshToken.Token,
+            newRefreshToken.Expires
+        );
+    }
+
     
     private async Task SaveChangesSafeAsync()
     {

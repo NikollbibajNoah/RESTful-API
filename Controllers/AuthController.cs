@@ -1,7 +1,12 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using System.Security.Cryptography;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity.Data;
 using Microsoft.AspNetCore.Mvc;
 using RESTful.Auth.Interface;
 using RESTful.Entity.Auth;
+using LoginRequest = RESTful.Entity.Auth.LoginRequest;
+using RefreshRequest = RESTful.Entity.Auth.RefreshRequest;
+using RegisterRequest = RESTful.Entity.Auth.RegisterRequest;
 
 namespace RESTful.Controllers;
 
@@ -31,9 +36,22 @@ public class AuthController : ControllerBase
     public async Task<ActionResult<AuthResponse>> Login([FromBody] LoginRequest req)
     {
         var result = await _auth.LoginAsync(req);
-        return Ok(new AuthResponse { Token = result.Token, ExpiresAtUtc = result.ExpiresAtUtc });
+        return Ok(new AuthResponse
+        {
+            AccessToken = result.AccessToken,
+            AccessTokenExpiresAtUtc = result.AccessTokenExpiresAtUtc,
+            RefreshToken = result.RefreshToken,
+            RefreshTokenExpiresAtUtc = result.RefreshTokenExpiresAtUtc
+        });
     }
-
+    
+    [HttpPost("refresh")]
+    public async Task<IActionResult> Refresh([FromBody] RefreshRequest request)
+    {
+        var result = await _auth.RefreshAsync(request.RefreshToken);
+        return Ok(result);
+    }
+    
     // Test: protected Endpoint
     [Authorize]
     [HttpGet("me")]
