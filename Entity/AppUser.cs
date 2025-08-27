@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using RESTful.Entity.Auth;
 
 namespace RESTful.Entity;
 
@@ -16,7 +17,7 @@ public class AppUser
     public string PasswordHash { get; set; } = null!;
 
     [Required, MaxLength(32)]
-    public string Role { get; set; } = "User";
+    public UserRole Role { get; set; } = UserRole.User;
 
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 }

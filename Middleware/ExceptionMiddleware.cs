@@ -22,7 +22,7 @@ public class ExceptionMiddleware
             await _next(context);
         } catch (Exception e) {
             _logger.LogError(e, "Unhandled exception occured");
-            
+            context.Response.StatusCode = StatusCodes.Status400BadRequest;
             await HandleExceptionAsync(context, e);
         }
     }

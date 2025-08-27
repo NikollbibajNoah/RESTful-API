@@ -14,12 +14,14 @@ public class AuthService : IAuthService
     private readonly AuthDbContext _db;
     private readonly IPasswordHasher<AppUser> _hasher;
     private readonly IJwtTokenService _jwt;
-
-    public AuthService(AuthDbContext db, IPasswordHasher<AppUser> hasher, IJwtTokenService jwt)
+    private readonly ILogger<AuthService> _logger;
+    
+    public AuthService(AuthDbContext db, IPasswordHasher<AppUser> hasher, IJwtTokenService jwt, ILogger<AuthService> logger)
     {
         _db = db;
         _hasher = hasher;
         _jwt = jwt;
+        _logger = logger;
     }
     
     public async Task<AppUser> RegisterAsync(RegisterRequest req)
@@ -27,14 +29,18 @@ public class AuthService : IAuthService
         // Check for uniqueness
         var exists = await _db.AppUsers
             .AnyAsync(u => u.Username == req.Username || u.Email == req.Email);
+
         if (exists)
+        {
+            _logger.LogWarning($"Username {req.Username} or Email {req.Email} already exists");
             throw new ValidationException("Username oder Email ist bereits vergeben.");
+        }
 
         var user = new AppUser
         {
             Username = req.Username,
             Email = req.Email,
-            Role = "User"
+            Role = UserRole.User // hard-coded default
         };
 
         user.PasswordHash = _hasher.HashPassword(user, req.Password);
@@ -42,6 +48,8 @@ public class AuthService : IAuthService
         _db.AppUsers.Add(user);
 
         await SaveChangesSafeAsync();
+        
+        _logger.LogInformation("User {UserId} registered successfully", user.Id);
 
         return user;
     }
@@ -52,12 +60,18 @@ public class AuthService : IAuthService
             .FirstOrDefaultAsync(u => u.Username == req.UsernameOrEmail || u.Email == req.UsernameOrEmail);
 
         if (user == null)
+        {
+            _logger.LogWarning("Login failed for {UsernameOrEmail}", req.UsernameOrEmail);
             throw new ValidationException("Benutzername/Email oder Passwort ist falsch.");
+        }
 
         var result = _hasher.VerifyHashedPassword(user, user.PasswordHash, req.Password);
         
-        if (result == PasswordVerificationResult.Failed)
+        if (result == PasswordVerificationResult.Failed) 
+        {
+            _logger.LogWarning("Invalid password for user {UserId}", user.Id);
             throw new ValidationException("Benutzername/Email oder Passwort ist falsch.");
+        }
 
         var tokenResult = _jwt.CreateToken(user);
         
@@ -71,6 +85,8 @@ public class AuthService : IAuthService
         
         _db.RefreshTokens.Add(refreshToken);
         await SaveChangesSafeAsync();
+        
+        _logger.LogInformation("User {UserId} logged in successfully", user.Id);
         
         return new JwtTokenResult(
             tokenResult.AccessToken,

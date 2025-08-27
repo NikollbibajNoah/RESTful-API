@@ -9,6 +9,7 @@ using RESTful.Auth;
 using RESTful.Auth.Interface;
 using RESTful.Context;
 using RESTful.Entity;
+using RESTful.Entity.Auth;
 using RESTful.Middleware;
 using RESTful.Service.Implementation;
 using RESTful.Service.Interface;
@@ -58,17 +59,20 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJw
 
 builder.Services.AddSwaggerGen(c =>
 {
-    c.SwaggerDoc("v1", new() { Title = "RESTful API", Version = "v1" });
+    c.SwaggerDoc("v1", new OpenApiInfo { Title = "RESTful API", Version = "v1" });
+
+    var securityScheme = new OpenApiSecurityScheme
+    {
+        Name = "Authorization",
+        Description = "Enter 'Bearer {token}'",
+        In = ParameterLocation.Header,
+        Type = SecuritySchemeType.Http,
+        Scheme = "bearer",
+        BearerFormat = "JWT"
+    };
     
     // Security for Swagger
-    c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
-    {
-        In = ParameterLocation.Header,
-        Description = "Bitte 'Bearer' + Leerzeichen + JWT-Token eingeben",
-        Name = "Authorization",
-        Type = SecuritySchemeType.ApiKey,
-        Scheme = "Bearer"
-    });
+    c.AddSecurityDefinition("Bearer", securityScheme);
     
     // Securtiy Requirement for Swagger
     c.AddSecurityRequirement(new OpenApiSecurityRequirement
@@ -93,7 +97,12 @@ builder.Logging.AddConsole();
 builder.Logging.AddDebug();
 builder.Logging.SetMinimumLevel(LogLevel.Information);
 
-builder.Services.AddAuthorization(); // Auth
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("AdminOnly", p => p.RequireRole(UserRole.Admin.ToString()));
+    options.AddPolicy("Moderator", p => p.RequireRole(UserRole.Admin.ToString(), UserRole.Moderator.ToString()));
+}); // Auth
+
 builder.Services.AddControllers();
 builder.Services.AddOpenApi();
 builder.Services.AddEndpointsApiExplorer();
