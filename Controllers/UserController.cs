@@ -20,7 +20,7 @@ public class UserController : ControllerBase
     }
 
     [HttpGet]
-    [Authorize]
+    // [Authorize]
     public async Task<ActionResult<List<User>>> GetAllUsers()
     {
         var users = await _userService.GetAllUsers();
@@ -30,7 +30,7 @@ public class UserController : ControllerBase
     }
     
     [HttpGet("{id}")]
-    [Authorize]
+    // [Authorize]
     public async Task<ActionResult<User>> GetUserById(int id)
     {
         var foundUser = await _userService.GetUserById(id);
@@ -41,7 +41,7 @@ public class UserController : ControllerBase
     }
 
     [HttpPost]
-    [Authorize(Roles = nameof(UserRole.Admin))]
+    // [Authorize(Roles = nameof(UserRole.Admin))]
     public async Task<ActionResult<User>> CreateUser(User user)
     {
         // if (!ModelState.IsValid) throw new ValidationException("User model is invalid.");
@@ -52,7 +52,7 @@ public class UserController : ControllerBase
     }
 
     [HttpPut("{id}")]
-    [Authorize(Roles = nameof(UserRole.Admin))]
+    // [Authorize(Roles = nameof(UserRole.Admin))]
     public async Task<ActionResult<User>> UpdateUser(int id, User user)
     {
         // if (id != user.Id) throw new ValidationException($"Given ID {id} does not match User ID {user.Id}.");
@@ -67,7 +67,7 @@ public class UserController : ControllerBase
     }
 
     [HttpDelete("{id}")]
-    [Authorize(Roles = nameof(UserRole.Admin))]
+    // [Authorize(Roles = nameof(UserRole.Admin))]
     public async Task<ActionResult<User>> DeleteUser(int id)
     {
         var deletedUser = await _userService.DeleteUser(id);

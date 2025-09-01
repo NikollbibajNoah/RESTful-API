@@ -11,6 +11,7 @@ using RESTful.Context;
 using RESTful.Entity;
 using RESTful.Entity.Auth;
 using RESTful.Middleware;
+using RESTful.Options;
 using RESTful.Service.Implementation;
 using RESTful.Service.Interface;
 
@@ -107,6 +108,14 @@ builder.Services.AddControllers();
 builder.Services.AddOpenApi();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+builder.Services.AddMemoryCache();
+
+builder.Services.Configure<CacheOptions>(builder.Configuration.GetSection("Cache"));
+
+builder.Services.AddMemoryCache(options =>
+{
+    options.SizeLimit = 10_000; // Max cache size
+});
 
 var app = builder.Build();
 
