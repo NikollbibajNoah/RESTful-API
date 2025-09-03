@@ -25,12 +25,12 @@ builder.Services.AddDbContext<BackendDbContext>(options =>
     options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString)));
 
 // Auth database
-builder.Services.AddDbContext<AuthDbContext>(options => 
+builder.Services.AddDbContext<AuthDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("AuthDb")));
 
 
 // JWT options
-builder.Services.Configure<JwtOptions>(builder.Configuration.GetSection("Jwt")); // From appsettings
+builder.Services.Configure<JwtOptions>(builder.Configuration.GetSection("Jwt"));
 
 // Services
 builder.Services.AddScoped<IAuthService, AuthService>();
@@ -39,7 +39,8 @@ builder.Services.AddSingleton<IPasswordHasher<AppUser>, PasswordHasher<AppUser>>
 builder.Services.AddScoped<IUserService, UserService>();
 
 var jwt = builder.Configuration.GetSection("Jwt");
-var keyBytes = Encoding.UTF8.GetBytes(jwt["Secret"]!);
+var keyBytes =
+    Encoding.UTF8.GetBytes(jwt["Secret"] ?? throw new InvalidOperationException("JWT Secret not configured"));
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(options =>
 {
@@ -65,16 +66,16 @@ builder.Services.AddSwaggerGen(c =>
     var securityScheme = new OpenApiSecurityScheme
     {
         Name = "Authorization",
-        Description = "Enter 'Bearer {token}'",
+        Description = "JWT Authorization header. Example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6Ik...' (ohne 'Bearer')",
         In = ParameterLocation.Header,
         Type = SecuritySchemeType.Http,
         Scheme = "bearer",
         BearerFormat = "JWT"
     };
-    
+
     // Security for Swagger
     c.AddSecurityDefinition("Bearer", securityScheme);
-    
+
     // Securtiy Requirement for Swagger
     c.AddSecurityRequirement(new OpenApiSecurityRequirement
     {
@@ -96,19 +97,17 @@ builder.Services.AddSwaggerGen(c =>
 builder.Logging.ClearProviders();
 builder.Logging.AddConsole();
 builder.Logging.AddDebug();
-builder.Logging.SetMinimumLevel(LogLevel.Information);
+builder.Logging.SetMinimumLevel(LogLevel.Debug);
 
 builder.Services.AddAuthorization(options =>
 {
     options.AddPolicy("AdminOnly", p => p.RequireRole(UserRole.Admin.ToString()));
     options.AddPolicy("Moderator", p => p.RequireRole(UserRole.Admin.ToString(), UserRole.Moderator.ToString()));
-}); // Auth
+});
 
 builder.Services.AddControllers();
 builder.Services.AddOpenApi();
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
-builder.Services.AddMemoryCache();
 
 builder.Services.Configure<CacheOptions>(builder.Configuration.GetSection("Cache"));
 

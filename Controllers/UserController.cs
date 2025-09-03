@@ -28,7 +28,7 @@ public class UserController : ControllerBase
         return Ok(users);
     }
     
-    [HttpGet("{id}")]
+    [HttpGet("{id:int}")]
     [Authorize]
     public async Task<ActionResult<User>> GetUserById(int id)
     {
@@ -46,7 +46,7 @@ public class UserController : ControllerBase
         return CreatedAtAction(nameof(GetUserById), new { id = createdUser.Id }, createdUser); // 201
     }
 
-    [HttpPut("{id}")]
+    [HttpPut("{id:int}")]
     [Authorize(Roles = nameof(UserRole.Admin))]
     public async Task<ActionResult<User>> UpdateUser(int id, User user)
     {
@@ -55,7 +55,7 @@ public class UserController : ControllerBase
         return Ok(updatedUser);
     }
 
-    [HttpDelete("{id}")]
+    [HttpDelete("{id:int}")]
     [Authorize(Roles = nameof(UserRole.Admin))]
     public async Task<ActionResult<User>> DeleteUser(int id)
     {

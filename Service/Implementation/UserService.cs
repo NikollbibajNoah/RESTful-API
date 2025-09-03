@@ -155,7 +155,7 @@ public class UserService : IUserService
         return updated;
     }
     
-    public async Task<User> DeleteUser(int id) 
+    public async Task<User?> DeleteUser(int id) 
     {
         var user = await _context.Users.FindAsync(id);
 
