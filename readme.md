@@ -2,7 +2,8 @@
 
 This project is a **RESTful API** built with **.NET 9** using **JWT authentication**.  
 It is a learning project to practice authentication, authorization, and building a
-clean backend structure with Docker.
+clean backend structure with Docker, including advanced features like pagination,
+comprehensive exception handling, and caching.
 
 ---
 
@@ -12,20 +13,24 @@ clean backend structure with Docker.
 - [Architecture](#architecture)
 - [Structure](#structure)
 - [Authentication](#authentification)
+- [Exception Handling](#exception-handling)
 - [Setup & Run](#setup--run)
 
 ---
 
 ## Features
-- CRUD operations
-- User registration & login with JWT
-- Protected endpoints with `[Authorize]`
-- Two separate databases:
-    - **MySQL** → business data (e.g. users / entities)
-    - **PostgreSQL** → authentication (user credentials)
-- Swagger UI with JWT support
-- Exception handling middleware
-- Docker setup for MySQL & PostgreSQL
+- **CRUD operations** with pagination support
+- **User registration & login** with JWT authentication
+- **Protected endpoints** with `[Authorize]` attribute
+- **Two separate databases**:
+    - **MySQL** → Business data (users, entities)
+    - **PostgreSQL** → Authentication data (user credentials)
+- **Advanced exception handling** with structured error responses
+- **Memory caching** for improved performance
+- **Pagination** for large data sets (WIP)
+- **CORS configuration** for different environments
+- **Swagger UI** with JWT support
+- **Docker setup** for MySQL & PostgreSQL
 
 ---
 
@@ -48,6 +53,8 @@ The application follows a layered architecture:
 - **DbContexts** → EF Core contexts (MySQL for business data, PostgreSQL for auth data)
 - **Middleware** → Global error handling, logging
 - **Authentication** → JWT-based authentication and claims
+- **Exception Handling** → Structured error responses
+- **Caching** → Memory caching for performance optimization
 
 ## Structure
 ```
@@ -112,6 +119,30 @@ Authorization: Bearer <JWT_TOKEN>
 }
 ```
 
+## Exception Handling
+The API provides structured error responses for different scenarios:
+### Validation Errors (400 Bad Request)
+```json
+{
+  "statusCode": 400,
+  "message": "Validation failed",
+  "details": [
+    "Name: Name is required",
+    "Email: Invalid email format",
+    "Age: Age must be between 1 and 150"
+  ],
+  "timestamp": "2024-01-15T10:30:00Z"
+}
+```
+
+### Not Found (404)
+```json
+{
+  "statusCode": 404,
+  "message": "User with ID '999' was not found",
+  "timestamp": "2024-01-15T10:30:00Z"
+}
+```
 
 ## Setup & Run
 Requirements
