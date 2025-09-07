@@ -50,6 +50,11 @@ public class ExceptionMiddleware
                 message = exception.Message;
                 _logger.LogError(exception, message);
                 break;
+            case ValidationException:
+                statusCode = HttpStatusCode.BadRequest;
+                message = exception.Message;
+                _logger.LogWarning(exception, message);
+                break;
             default:
                 statusCode = HttpStatusCode.InternalServerError;
                 message = "An unexpected error occured";

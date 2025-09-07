@@ -28,7 +28,6 @@ builder.Services.AddDbContext<BackendDbContext>(options =>
 builder.Services.AddDbContext<AuthDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("AuthDb")));
 
-
 // JWT options
 builder.Services.Configure<JwtOptions>(builder.Configuration.GetSection("Jwt"));
 
@@ -38,13 +37,28 @@ builder.Services.AddSingleton<IJwtTokenService, JwtTokenService>();
 builder.Services.AddSingleton<IPasswordHasher<AppUser>, PasswordHasher<AppUser>>();
 builder.Services.AddScoped<IUserService, UserService>();
 
+// CORS configuration
+var corsOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>() ?? [];
+
+builder.Services.AddCors(options =>
+{
+    options.AddDefaultPolicy(policy =>
+    {
+        policy.WithOrigins(corsOrigins)
+            .AllowAnyMethod()
+            .AllowAnyHeader()
+            .AllowCredentials();
+    });
+});
+
+// JWT Authentication
 var jwt = builder.Configuration.GetSection("Jwt");
 var keyBytes =
     Encoding.UTF8.GetBytes(jwt["Secret"] ?? throw new InvalidOperationException("JWT Secret not configured"));
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(options =>
 {
-    options.RequireHttpsMetadata = false; // in Dev ok, Prod to true
+    options.RequireHttpsMetadata = !builder.Environment.IsDevelopment(); // in Dev ok, Prod to true
     options.SaveToken = true;
     options.TokenValidationParameters = new TokenValidationParameters
     {
@@ -99,6 +113,7 @@ builder.Logging.AddConsole();
 builder.Logging.AddDebug();
 builder.Logging.SetMinimumLevel(LogLevel.Debug);
 
+// Authorization policies
 builder.Services.AddAuthorization(options =>
 {
     options.AddPolicy("AdminOnly", p => p.RequireRole(UserRole.Admin.ToString()));
@@ -109,17 +124,23 @@ builder.Services.AddControllers();
 builder.Services.AddOpenApi();
 builder.Services.AddEndpointsApiExplorer();
 
-builder.Services.Configure<CacheOptions>(builder.Configuration.GetSection("Cache"));
+// Caching configuration
+var cacheOptions = builder.Configuration.GetSection("Cache");
+
+builder.Services.Configure<CacheOptions>(cacheOptions);
 
 builder.Services.AddMemoryCache(options =>
 {
-    options.SizeLimit = 10_000; // Max cache size
+    options.SizeLimit = cacheOptions.GetValue<long>("SizeLimit", 10_000); // Max cache size
 });
 
 var app = builder.Build();
 
 // Middlerware exception handler
 app.UseMiddleware<ExceptionMiddleware>();
+
+// CORS configuration
+app.UseCors();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
