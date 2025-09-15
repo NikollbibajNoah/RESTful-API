@@ -6,9 +6,9 @@ public class JwtTokenResult
 {
     public string AccessToken { get; }
     public DateTime AccessTokenExpiresAtUtc { get; }
-    
+
     public string? RefreshToken { get; }
-    
+
     public DateTime? RefreshTokenExpiresAtUtc { get; }
 
     public JwtTokenResult(string accessToken, DateTime accessTokenExpiresAtUtc)
@@ -16,7 +16,7 @@ public class JwtTokenResult
         AccessToken = accessToken;
         AccessTokenExpiresAtUtc = accessTokenExpiresAtUtc;
     }
-    
+
     public JwtTokenResult(string accessToken, DateTime accessTokenExpiresAtUtc, string refreshToken, DateTime refreshTokenExpiresAtUtc)
     {
         AccessToken = accessToken;

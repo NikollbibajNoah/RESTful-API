@@ -13,7 +13,7 @@ public class UserController : ControllerBase
 {
 
     private readonly IUserService _userService;
-    
+
     public UserController(IUserService userService)
     {
         this._userService = userService;
@@ -27,7 +27,7 @@ public class UserController : ControllerBase
 
         return Ok(users);
     }
-    
+
     [HttpGet("{id:int}")]
     [Authorize]
     public async Task<ActionResult<User>> GetUserById(int id)
@@ -60,7 +60,7 @@ public class UserController : ControllerBase
     public async Task<ActionResult<User>> DeleteUser(int id)
     {
         var deletedUser = await _userService.DeleteUser(id);
-        
+
         return Ok(deletedUser);
     }
 }

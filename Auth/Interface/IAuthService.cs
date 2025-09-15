@@ -15,14 +15,14 @@ public interface IAuthService
     /// <param name="request">Register request: username, email and password</param>
     /// <returns>App user</returns>
     Task<AppUser> RegisterAsync(RegisterRequest request);
-    
+
     /// <summary>
     /// Login by username or email adress and password. After successfully login, token gets returned to authenticate.
     /// </summary>
     /// <param name="request">Login request: Username/Email-adress and password</param>
     /// <returns>JWT Token with expiration time</returns>
     Task<JwtTokenResult> LoginAsync(LoginRequest request);
-    
+
     /// <summary>
     /// Refreshes an expired or soon-to-expire access token using a valid refresh token.
     /// </summary>

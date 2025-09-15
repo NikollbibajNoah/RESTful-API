@@ -20,7 +20,9 @@ public class ExceptionMiddleware
         try
         {
             await _next(context);
-        } catch (Exception e) {
+        }
+        catch (Exception e)
+        {
             _logger.LogError(e, "Unhandled exception occured");
             context.Response.StatusCode = StatusCodes.Status400BadRequest;
             await HandleExceptionAsync(context, e);
@@ -30,7 +32,7 @@ public class ExceptionMiddleware
     private Task HandleExceptionAsync(HttpContext context, Exception exception)
     {
         HttpStatusCode statusCode = HttpStatusCode.InternalServerError;
-        
+
         string message = "An unexpected error occured";
 
         switch (exception)
@@ -60,9 +62,9 @@ public class ExceptionMiddleware
                 message = "An unexpected error occured";
                 _logger.LogError(exception, message);
                 break;
-            // More exceptions down here...
-        } 
-        
+                // More exceptions down here...
+        }
+
         var errorDetails = new ErrorDetails
         {
             StatusCode = (int)statusCode,
@@ -71,7 +73,7 @@ public class ExceptionMiddleware
             Details = exception.StackTrace
 #endif
         };
-        
+
         context.Response.ContentType = "application/json";
         context.Response.StatusCode = (int)statusCode;
 

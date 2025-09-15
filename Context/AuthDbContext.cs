@@ -23,7 +23,7 @@ public class AuthDbContext : DbContext
         modelBuilder.Entity<AppUser>()
             .HasIndex(u => u.Email)
             .IsUnique();
-        
+
         modelBuilder.Entity<AppUser>(b =>
         {
             b.Property(u => u.Role)

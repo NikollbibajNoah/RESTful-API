@@ -30,11 +30,11 @@ public class JwtTokenService : IJwtTokenService
             new Claim(JwtClaims.Role, user.Role.ToString()),
             new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
         };
-        
+
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_options.Secret));
         var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
         var expires = DateTime.UtcNow.AddMinutes(_options.ExpiryMinutes);
-        
+
         var token = new JwtSecurityToken(
             issuer: _options.Issuer,
             audience: _options.Audience,
@@ -42,7 +42,7 @@ public class JwtTokenService : IJwtTokenService
             expires: expires,
             signingCredentials: credentials
         );
-        
+
         var jwt = new JwtSecurityTokenHandler().WriteToken(token);
 
         return new JwtTokenResult(jwt, expires);

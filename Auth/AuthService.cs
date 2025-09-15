@@ -15,7 +15,7 @@ public class AuthService : IAuthService
     private readonly IPasswordHasher<AppUser> _hasher;
     private readonly IJwtTokenService _jwt;
     private readonly ILogger<AuthService> _logger;
-    
+
     public AuthService(AuthDbContext db, IPasswordHasher<AppUser> hasher, IJwtTokenService jwt, ILogger<AuthService> logger)
     {
         _db = db;
@@ -23,7 +23,7 @@ public class AuthService : IAuthService
         _jwt = jwt;
         _logger = logger;
     }
-    
+
     public async Task<AppUser> RegisterAsync(RegisterRequest req)
     {
         // Check for uniqueness
@@ -48,12 +48,12 @@ public class AuthService : IAuthService
         _db.AppUsers.Add(user);
 
         await SaveChangesSafeAsync();
-        
+
         _logger.LogInformation("User {UserId} registered successfully", user.Id);
 
         return user;
     }
-    
+
     public async Task<JwtTokenResult> LoginAsync(LoginRequest req)
     {
         var user = await _db.AppUsers
@@ -66,15 +66,15 @@ public class AuthService : IAuthService
         }
 
         var result = _hasher.VerifyHashedPassword(user, user.PasswordHash, req.Password);
-        
-        if (result == PasswordVerificationResult.Failed) 
+
+        if (result == PasswordVerificationResult.Failed)
         {
             _logger.LogWarning("Invalid password for user {UserId}", user.Id);
             throw new ValidationException("Benutzername/Email oder Passwort ist falsch.");
         }
 
         var tokenResult = _jwt.CreateToken(user);
-        
+
         var refreshToken = new RefreshToken
         {
             Token = Convert.ToBase64String(RandomNumberGenerator.GetBytes(64)),
@@ -82,12 +82,12 @@ public class AuthService : IAuthService
             IsRevoked = false,
             UserId = user.Id
         };
-        
+
         _db.RefreshTokens.Add(refreshToken);
         await SaveChangesSafeAsync();
-        
+
         _logger.LogInformation("User {UserId} logged in successfully", user.Id);
-        
+
         return new JwtTokenResult(
             tokenResult.AccessToken,
             tokenResult.AccessTokenExpiresAtUtc,
@@ -95,7 +95,7 @@ public class AuthService : IAuthService
             refreshToken.Expires
         );
     }
-    
+
     public async Task<JwtTokenResult> RefreshAsync(string refreshTokenValue)
     {
         var refreshToken = await _db.RefreshTokens
@@ -130,13 +130,15 @@ public class AuthService : IAuthService
         );
     }
 
-    
+
     private async Task SaveChangesSafeAsync()
     {
-        try {
+        try
+        {
             await _db.SaveChangesAsync();
         }
-        catch (DbUpdateException ex) {
+        catch (DbUpdateException ex)
+        {
             throw new DatabaseException("Failed to save changes.", ex);
         }
     }

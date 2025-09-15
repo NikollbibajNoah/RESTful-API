@@ -44,14 +44,14 @@ public class AuthController : ControllerBase
             RefreshTokenExpiresAtUtc = result.RefreshTokenExpiresAtUtc
         });
     }
-    
+
     [HttpPost("refresh")]
     public async Task<IActionResult> Refresh([FromBody] RefreshRequest request)
     {
         var result = await _auth.RefreshAsync(request.RefreshToken);
         return Ok(result);
     }
-    
+
     // Test: protected Endpoint
     [Authorize]
     [HttpGet("me")]
