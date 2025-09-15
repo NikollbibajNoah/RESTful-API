@@ -2,7 +2,7 @@
 
 This project is a **RESTful API** built with **.NET 9** using **JWT authentication**.  
 It is a learning project to practice authentication, authorization, and building a
-clean backend structure with Docker, including advanced features like pagination,
+clean backend structure with Docker, including advanced features like
 comprehensive exception handling, and caching.
 
 ---
@@ -19,7 +19,7 @@ comprehensive exception handling, and caching.
 ---
 
 ## Features
-- **CRUD operations** with pagination support
+- **CRUD operations** for user entities
 - **User registration & login** with JWT authentication
 - **Protected endpoints** with `[Authorize]` attribute
 - **Two separate databases**:
@@ -27,7 +27,6 @@ comprehensive exception handling, and caching.
     - **PostgreSQL** → Authentication data (user credentials)
 - **Advanced exception handling** with structured error responses
 - **Memory caching** for improved performance
-- **Pagination** for large data sets (WIP)
 - **CORS configuration** for different environments
 - **Swagger UI** with JWT support
 - **Docker setup** for MySQL & PostgreSQL
@@ -113,8 +112,7 @@ Authorization: Bearer <JWT_TOKEN>
     { "type": "nameidentifier", "value": "2" },
     { "type": "name", "value": "Noah" },
     { "type": "email", "value": "user@example.com" },
-    { "type": "role", "value": "User" },
-    ...
+    { "type": "role", "value": "User" }
   ]
 }
 ```
