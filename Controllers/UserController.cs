@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using RESTful.Entity;
 using RESTful.Entity.Auth;
 using RESTful.Exceptions;
+using RESTful.Service.Implementation;
 using RESTful.Service.Interface;
 
 namespace RESTful.Controllers;
@@ -23,7 +24,7 @@ public class UserController : ControllerBase
     [Authorize]
     public async Task<ActionResult<List<User>>> GetAllUsers()
     {
-        var users = await _userService.GetAllUsers();
+        var users = await _userService.GetAllAsync();
 
         return Ok(users);
     }
@@ -32,7 +33,7 @@ public class UserController : ControllerBase
     [Authorize]
     public async Task<ActionResult<User>> GetUserById(int id)
     {
-        var foundUser = await _userService.GetUserById(id);
+        var foundUser = await _userService.GetByIdAsync(id);
 
         return Ok(foundUser);
     }
@@ -41,7 +42,7 @@ public class UserController : ControllerBase
     [Authorize(Roles = nameof(UserRole.Admin))]
     public async Task<ActionResult<User>> CreateUser(User user)
     {
-        var createdUser = await _userService.CreateUser(user);
+        var createdUser = await _userService.CreateAsync(user);
 
         return CreatedAtAction(nameof(GetUserById), new { id = createdUser.Id }, createdUser); // 201
     }
@@ -50,7 +51,7 @@ public class UserController : ControllerBase
     [Authorize(Roles = nameof(UserRole.Admin))]
     public async Task<ActionResult<User>> UpdateUser(int id, User user)
     {
-        var updatedUser = await _userService.UpdateUser(id, user);
+        var updatedUser = await _userService.UpdateAsync(id, user);
 
         return Ok(updatedUser);
     }
@@ -59,8 +60,36 @@ public class UserController : ControllerBase
     [Authorize(Roles = nameof(UserRole.Admin))]
     public async Task<ActionResult<User>> DeleteUser(int id)
     {
-        var deletedUser = await _userService.DeleteUser(id);
+        var deletedUser = await _userService.DeleteAsync(id);
 
         return Ok(deletedUser);
+    }
+    
+    [HttpGet("age-range")]
+    [Authorize]
+    public async Task<ActionResult<List<User>>> GetUsersByAgeRange(
+        [FromQuery] int minAge = 0,
+        [FromQuery] int maxAge = 150)
+    {
+        var users = await _userService.GetUsersByAgeRangeAsync(minAge, maxAge);
+        return Ok(users);
+    }
+
+    [HttpGet("position/{position}")]
+    [Authorize]
+    public async Task<ActionResult<List<User>>> GetUsersByPosition(string position)
+    {
+        var users = await _userService.GetUsersByPositionAsync(position);
+        return Ok(users);
+    }
+
+    [HttpGet("email/{email}")]
+    [Authorize]
+    public async Task<ActionResult<User>> GetUserByEmail(string email)
+    {
+        var user = await _userService.GetUserByEmailAsync(email);
+        if (user == null)
+            return NotFound();
+        return Ok(user);
     }
 }

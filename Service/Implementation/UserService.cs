@@ -1,186 +1,111 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
-using RESTful.Common;
 using RESTful.Context;
 using RESTful.Entity;
-using RESTful.Exceptions;
 using RESTful.Service.Interface;
 
 namespace RESTful.Service.Implementation;
 
-public class UserService : IUserService
+public class UserService : GenericService<User>, IUserService
 {
-
     private readonly BackendDbContext _context;
-    private readonly IMemoryCache _cache;
+    private readonly ICachingService _cachingService;
     private readonly ILogger<UserService> _logger;
-
-    public UserService(BackendDbContext context, IMemoryCache cache, ILogger<UserService> logger)
+    
+    public UserService(BackendDbContext context, ICachingService cachingService, ILogger<UserService> logger) 
+        : base(context, cachingService, logger)
     {
         _context = context;
-        _cache = cache;
+        _cachingService = cachingService;
         _logger = logger;
     }
-
-    public async Task<List<User>> GetAllUsers()
+    
+    public async Task<List<User>> GetUsersByAgeRangeAsync(int minAge, int maxAge)
     {
-        var key = CacheKeys.UsersAll;
+        var key = $"Users_Age_{minAge}_{maxAge}";
 
-        // 1) Try caching
-        try
-        {
-            if (_cache.TryGetValue<List<User>>(key, out var cached))
-            {
-                _logger.LogInformation($"[CACHE HIT] All users");
-                return cached;
-            }
-        }
-        catch (Exception ex)
-        {
-            _logger.LogWarning(ex, "Cache lookup failed for key {CacheKey}", key);
-        }
+        var cached = await _cachingService.GetAsync<List<User>>(key);
+        if (cached != null)
+            return cached;
 
-        _logger.LogInformation("Fetching all users from database...");
+        _logger.LogInformation("[DB QUERY] Users by age range {MinAge}-{MaxAge}", minAge, maxAge);
+        var users = await _context.Users
+            .Where(u => u.Age >= minAge && u.Age <= maxAge)
+            .AsNoTracking()
+            .ToListAsync();
 
-        // 2) Query db
-        _logger.LogInformation("[DB QUERY] All users");
-        var users = await _context.Users.AsNoTracking().ToListAsync();
-
-        if (users.Count == 0)
-        {
-            _logger.LogWarning("No users found in the database.");
-            throw new NotFoundException("No users found in the database.");
-        }
-
-        // 3) Put in cache
-        var entryOptions = new MemoryCacheEntryOptions()
-            .SetAbsoluteExpiration(TimeSpan.FromMinutes(2))
-            .SetSlidingExpiration(TimeSpan.FromSeconds(30))
-            .SetSize(5);
-
-        _cache.Set(key, users, entryOptions);
-
+        // Apply caching
+        await _cachingService.SetAsync(key, users);
+        
         return users;
     }
 
-    public async Task<User?> GetUserById(int id)
+    public async Task<List<User>> GetUsersByPositionAsync(string position)
     {
-        var key = CacheKeys.UserById(id);
+        var key = $"Users_Position_{position}";
 
-        // 1) Try caching
-        try
+        var cached = await _cachingService.GetAsync<List<User>>(key);
+        if (cached != null)
+            return cached;
+
+        _logger.LogInformation("[DB QUERY] Users by position {Position}", position);
+        var users = await _context.Users
+            .Where(u => u.Position.ToLower() == position.ToLower())
+            .AsNoTracking()
+            .ToListAsync();
+
+        // Apply caching
+        await _cachingService.SetAsync(key, users);
+        
+        return users;
+    }
+
+    public async Task<User?> GetUserByEmailAsync(string email)
+    {
+        var key = $"User_Email_{email}";
+
+        var cached = await _cachingService.GetAsync<User>(key);
+        if (cached != null)
+            return cached;
+
+        _logger.LogInformation("[DB QUERY] User by email {Email}", email);
+        var user = await _context.Users
+            .AsNoTracking()
+            .FirstOrDefaultAsync(u => u.Email.ToLower() == email.ToLower());
+
+        // Apply caching if user is found
+        if (user != null)
         {
-            if (_cache.TryGetValue<User>(key, out var cached))
-            {
-                _logger.LogInformation($"[CACHE HIT] User {id}");
-                return cached;
-            }
+            await _cachingService.SetAsync(key, user);
         }
-        catch (Exception ex)
-        {
-            _logger.LogWarning(ex, "Cache lookup failed for key {CacheKey}", key);
-        }
-
-        // 2) Read db
-        _logger.LogInformation($"[DB QUERY] User {id}");
-
-        var user = await _context.Users.AsNoTracking()
-            .FirstOrDefaultAsync(u => u.Id == id);
-
-        if (user == null)
-            throw new NotFoundException($"User with ID {id} was not found.");
-
-        // 3) Put in cache
-        var entryOptions = new MemoryCacheEntryOptions()
-            .SetAbsoluteExpiration(TimeSpan.FromMinutes(2))
-            .SetSlidingExpiration(TimeSpan.FromSeconds(30))
-            .SetSize(1);
-
-        _cache.Set(key, user, entryOptions);
 
         return user;
     }
 
-    public async Task<User> CreateUser(User user)
+    public async Task<bool> EmailExistsAsync(string email)
     {
-        if (user == null)
-            throw new ValidationException("User data cannot be null.");
-
-        _context.Users.Add(user);
-
-        await SaveChangesSafeAsync();
-
-        var entryOptions = new MemoryCacheEntryOptions()
-            .SetAbsoluteExpiration(TimeSpan.FromMinutes(2))
-            .SetSlidingExpiration(TimeSpan.FromSeconds(30))
-            .SetSize(1);
-
-        _cache.Set(CacheKeys.UserById(user.Id), user, entryOptions);
-
-        // Restore cache
-        _cache.Remove(CacheKeys.UsersAll);
-
-        return user;
+        return await _context.Users
+            .AsNoTracking()
+            .AnyAsync(u => u.Email.ToLower() == email.ToLower());
     }
 
-    public async Task<User?> UpdateUser(int id, User user)
+    public async Task<List<User>> GetActiveUsersAsync()
     {
-        if (user == null)
-            throw new ValidationException("User data cannot be null.");
+        const string key = "Users_Active";
 
-        var existing = await _context.Users.FindAsync(id);
+        var cached = await _cachingService.GetAsync<List<User>>(key);
+        if (cached != null)
+            return cached;
 
-        if (existing == null)
-            throw new NotFoundException($"User with ID {id} was not found.");
+        _logger.LogInformation("[DB QUERY] Active users");
+        var users = await _context.Users
+            .Where(u => !string.IsNullOrEmpty(u.Email))
+            .AsNoTracking()
+            .ToListAsync();
 
-        // Mapping fields
-        existing.Name = user.Name;
-        existing.Age = user.Age;
-        existing.Email = user.Email;
-        existing.Position = user.Position;
-
-        await SaveChangesSafeAsync();
-
-        var updated = await _context.Users.AsNoTracking()
-            .FirstAsync(u => u.Id == id);
-
-        var entryOptions = new MemoryCacheEntryOptions()
-            .SetAbsoluteExpiration(TimeSpan.FromMinutes(2))
-            .SetSlidingExpiration(TimeSpan.FromSeconds(30))
-            .SetSize(1);
-
-        _cache.Set(CacheKeys.UserById(id), updated, entryOptions);
-        _cache.Remove(CacheKeys.UsersAll); // Optional
-
-        return updated;
-    }
-
-    public async Task<User?> DeleteUser(int id)
-    {
-        var user = await _context.Users.FindAsync(id);
-
-        if (user == null)
-            throw new NotFoundException($"User with ID {id} was not found.");
-
-        _context.Users.Remove(user);
-
-        await SaveChangesSafeAsync();
-
-        _cache.Remove(CacheKeys.UserById(id)); // Remove from cache
-        _cache.Remove(CacheKeys.UsersAll); // Restore cache
-
-        return user;
-    }
-
-    private async Task SaveChangesSafeAsync()
-    {
-        try
-        {
-            await _context.SaveChangesAsync();
-        }
-        catch (DbUpdateException ex)
-        {
-            throw new DatabaseException("Failed to save changes.", ex);
-        }
+        // Apply caching
+        await _cachingService.SetAsync(key, users);
+        
+        return users;
     }
 }
