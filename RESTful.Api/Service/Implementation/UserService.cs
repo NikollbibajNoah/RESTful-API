@@ -84,6 +84,9 @@ public class UserService : GenericService<User>, IUserService
 
     public async Task<bool> EmailExistsAsync(string email)
     {
+        if (string.IsNullOrEmpty(email))
+            return false;
+        
         return await _context.Users
             .AsNoTracking()
             .AnyAsync(u => u.Email.ToLower() == email.ToLower());
